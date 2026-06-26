@@ -1,49 +1,37 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
+# Logs
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# env files (can opt-in for committing if needed)
+# Dependencies & build output
+node_modules
+dist
+dist-ssr
+*.local
+
+# Env files (opt-in for committing if needed)
 .env*
 
-# vercel
+# Hosting
 .vercel
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Secrets
+*.pem
 
-# voltagent build output & local runtime state
-/dist
-.voltagent/
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# python bytecode (skill tooling)
-__pycache__/
-*.pyc
+# Local tooling (machine-specific)
+.claude/
