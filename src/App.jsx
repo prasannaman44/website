@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from 'react'
    EDITABLE CONTENT — everything you'd normally change lives in these constants.
    ========================================================================= */
 
-// Set to '/profile.jpg' after you drop a photo into public/ for a permanent image.
-const DEFAULT_IMAGE = ''
+// Permanent profile photo served from public/profile.jpg.
+const DEFAULT_IMAGE = '/profile.jpg'
 
 const PROFILE = {
   name: 'Prasanna Sairam',
