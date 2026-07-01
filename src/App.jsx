@@ -57,7 +57,7 @@ const HIGHLIGHTS = [
     title: 'A horror game that keeps you tense',
     blurb:
       'Designed enemy AI pathing, timed movement, jumpscare triggers, and fail-state logic — plus camera-feed UI — in Unreal Engine.',
-    tags: ['Unreal Engine'],
+    tags: ['Unreal Engine', 'C++'],
   },
 ]
 
@@ -114,7 +114,7 @@ const PROJECTS = [
     id: '04',
     title: 'Escape from UB',
     date: 'Nov – Dec 2025',
-    tags: ['Unreal Engine'],
+    tags: ['Unreal Engine', 'C++'],
     bullets: [
       "Designed and built a horror survival game inspired by Five Nights at Freddy's, featuring camera surveillance, enemy AI, and player resource management.",
       'Implemented core gameplay systems including AI pathing, timed enemy movement, jumpscare triggers, and fail-state logic to build player tension.',
@@ -137,7 +137,7 @@ const SKILLS = [
   {
     group: 'Languages',
     context: 'What I write in. The systems work lives in C and OCaml; the web work in Python and JavaScript.',
-    items: ['Java', 'Python', 'C', 'OCaml', 'JavaScript', 'HTML/CSS'],
+    items: ['Java', 'Python', 'C', 'C++', 'OCaml', 'JavaScript', 'HTML/CSS'],
   },
   {
     group: 'Tools & Technologies',
@@ -436,6 +436,8 @@ export default function App() {
     step()
   }
 
+  // Single unified action for every tech chip (filter pills, card tags, skills):
+  // set the filter and scroll the result into view.
   const filterTo = (tag) => {
     setFilter(tag)
     goTo('projects')
@@ -685,7 +687,7 @@ export default function App() {
                 <button
                   key={tag}
                   className={`filter${filter === tag ? ' active' : ''}`}
-                  onClick={() => setFilter(tag)}
+                  onClick={() => filterTo(tag)}
                   aria-pressed={filter === tag}
                 >
                   {tag}
@@ -693,9 +695,9 @@ export default function App() {
               ))}
             </div>
 
-            <div className="project-list">
+            <div className="project-list" key={filter}>
               {filteredProjects.map((p) => (
-                <article className="project reveal" key={p.id}>
+                <article className="project" key={p.id}>
                   <div className="project-side">
                     <span className="project-id mono">{p.id}</span>
                     <span className="project-date mono">{p.date}</span>
@@ -712,7 +714,7 @@ export default function App() {
                         <button
                           key={t}
                           className={`tag${filter === t ? ' tag-active' : ''}`}
-                          onClick={() => setFilter(t)}
+                          onClick={() => filterTo(t)}
                         >
                           {t}
                         </button>
@@ -1164,6 +1166,11 @@ button.tag:hover, .tag-active { background: var(--accent); color: #04122e; }
 .filter.active { color: #04122e; background: var(--accent); border-color: var(--accent); }
 
 .project-list { display: flex; flex-direction: column; gap: 16px; }
+/* Re-keyed on every filter change, so the results always animate in fully
+   visible — no dependency on the scroll-reveal observer. */
+.project-list { animation: results-in 0.38s ease both; }
+@keyframes results-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .project-list { animation: none; } }
 .project {
   display: grid; grid-template-columns: 160px 1fr; gap: 24px;
   padding: 28px; border-radius: var(--radius);
