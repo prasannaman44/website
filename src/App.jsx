@@ -167,8 +167,12 @@ const NAV = [
   { id: 'contact', label: 'Contact' },
 ]
 
-// All tech tags that map to a real project — used to make skills clickable.
-const PROJECT_TAGS = new Set(PROJECTS.flatMap((p) => p.tags))
+// The curated set of technologies used as project filters. Kept short and
+// language-focused so the filter row stays uncluttered; sub-tags like MongoDB /
+// WebSockets / bcrypt still appear on the project cards, just not as filters.
+// A tech is "filterable" (clickable pill / clickable skill) iff it's in here.
+const FILTERS = ['Python', 'C', 'C++', 'OCaml', 'Java', 'Unreal Engine']
+const FILTER_SET = new Set(FILTERS)
 
 /* ============================================================================
    INLINE ICONS
@@ -478,7 +482,7 @@ export default function App() {
   const filteredProjects =
     filter === 'All' ? PROJECTS : PROJECTS.filter((p) => p.tags.includes(filter))
 
-  const allTags = ['All', ...Array.from(new Set(PROJECTS.flatMap((p) => p.tags)))]
+  const allTags = ['All', ...FILTERS]
 
   return (
     <>
@@ -711,13 +715,12 @@ export default function App() {
                     </ul>
                     <div className="tag-row">
                       {p.tags.map((t) => (
-                        <button
+                        <span
                           key={t}
                           className={`tag${filter === t ? ' tag-active' : ''}`}
-                          onClick={() => filterTo(t)}
                         >
                           {t}
-                        </button>
+                        </span>
                       ))}
                     </div>
                   </div>
@@ -746,7 +749,7 @@ export default function App() {
                   <p className="skill-context">{group.context}</p>
                   <div className="skill-items">
                     {group.items.map((item) => {
-                      const linkable = PROJECT_TAGS.has(item)
+                      const linkable = FILTER_SET.has(item)
                       return linkable ? (
                         <button
                           key={item}
