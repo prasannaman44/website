@@ -805,7 +805,7 @@ export default function App() {
             </div>
 
             <footer className="footer mono">
-              © {new Date().getFullYear()} {PROFILE.fullName} — built from scratch, of course.
+              © {new Date().getFullYear()} {PROFILE.fullName}
             </footer>
           </section>
         </main>

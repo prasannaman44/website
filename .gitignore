@@ -32,6 +32,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-# Local tooling (machine-specific)
-.claude/
