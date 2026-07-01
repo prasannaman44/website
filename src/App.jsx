@@ -329,7 +329,9 @@ function useReveal() {
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const els = document.querySelectorAll('.reveal')
-    if (reduce) {
+    // Fail open: if motion is reduced or IntersectionObserver is unavailable,
+    // show everything immediately rather than leaving content invisible.
+    if (reduce || typeof IntersectionObserver === 'undefined') {
       els.forEach((el) => el.classList.add('in'))
       return
     }
@@ -361,15 +363,19 @@ export default function App() {
   const [copied, setCopied] = useState(false)
   const fileInput = useRef(null)
   const resumeWrap = useRef(null)
+  const scrollRaf = useRef(0)
 
   useReveal()
 
-  // Scroll progress bar
+  // Scroll progress bar + "at page bottom highlights the last nav item"
   useEffect(() => {
     const onScroll = () => {
       const h = document.documentElement
       const max = h.scrollHeight - h.clientHeight
       setProgress(max > 0 ? (h.scrollTop / max) * 100 : 0)
+      // The last section is too short to reach the scroll-spy band, so pin it
+      // active once we're within a few px of the bottom.
+      if (max > 0 && max - h.scrollTop < 4) setActive(NAV[NAV.length - 1].id)
     }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -393,9 +399,41 @@ export default function App() {
     return () => io.disconnect()
   }, [])
 
+  // Custom smooth scroll. Native smooth scrolling silently fails in some
+  // browsers/embeds, so we animate the scroll ourselves. Driven by setTimeout
+  // (not requestAnimationFrame) so it still runs in environments that throttle
+  // frame callbacks; each step is an instant jump, the loop makes it smooth.
   const goTo = (id) => {
     const el = document.getElementById(id)
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (!el) return
+    clearTimeout(scrollRaf.current)
+
+    // Offset for the sticky top bar that replaces the sidebar on narrow screens.
+    const bar = document.querySelector('.sidebar')
+    const isTopBar = bar && getComputedStyle(bar).position === 'sticky'
+    const offset = isTopBar ? bar.offsetHeight + 12 : 0
+
+    const startY = window.scrollY
+    const maxY = Math.max(document.documentElement.scrollHeight - window.innerHeight, 0)
+    const targetY = Math.min(Math.max(el.getBoundingClientRect().top + startY - offset, 0), maxY)
+    const dist = targetY - startY
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduce || Math.abs(dist) < 4) {
+      window.scrollTo(0, targetY)
+      return
+    }
+
+    const duration = Math.min(800, Math.max(320, Math.abs(dist) * 0.5))
+    const startT = performance.now()
+    const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
+    const step = () => {
+      const p = Math.min(1, (performance.now() - startT) / duration)
+      window.scrollTo(0, Math.round(startY + dist * ease(p)))
+      if (p < 1) scrollRaf.current = setTimeout(step, 16)
+      else scrollRaf.current = 0
+    }
+    step()
   }
 
   const filterTo = (tag) => {
@@ -423,8 +461,11 @@ export default function App() {
 
   const fullscreenResume = () => {
     const el = resumeWrap.current
-    if (el && el.requestFullscreen) el.requestFullscreen()
-    else window.open('/resume.pdf', '_blank', 'noopener')
+    if (el && el.requestFullscreen) {
+      el.requestFullscreen().catch(() => window.open('/resume.pdf', '_blank', 'noopener'))
+    } else {
+      window.open('/resume.pdf', '_blank', 'noopener')
+    }
   }
 
   const initials = PROFILE.name
@@ -599,15 +640,19 @@ export default function App() {
             </div>
 
             <div className="resume-frame reveal" ref={resumeWrap}>
-              <object data="/resume.pdf#view=FitH" type="application/pdf" aria-label="Résumé PDF">
-                <div className="resume-fallback">
-                  <p>Your browser can't display the embedded PDF.</p>
-                  <a className="btn btn-amber" href="/resume.pdf" target="_blank" rel="noopener noreferrer">
-                    {Icon.download()} Open résumé
-                  </a>
-                </div>
-              </object>
+              <iframe
+                src="/resume.pdf#view=FitH"
+                title="Prasanna Sairam — résumé (PDF)"
+                loading="lazy"
+              />
             </div>
+            <p className="resume-note">
+              Trouble viewing it here?{' '}
+              <a href="/resume.pdf" target="_blank" rel="noopener noreferrer">
+                Open the PDF in a new tab
+              </a>
+              .
+            </p>
 
             <article className="edu-card reveal">
               <div className="edu-top">
@@ -791,10 +836,9 @@ const CSS = `
 
 * { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-}
+/* Smooth scrolling is handled in JS (goTo) for reliability; keep CSS instant
+   so it doesn't fight the rAF animation. */
+html { scroll-behavior: auto; }
 
 body {
   margin: 0;
@@ -1066,11 +1110,13 @@ button.tag:hover, .tag-active { background: var(--accent); color: #04122e; }
 .resume-actions { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
 .resume-frame {
   border-radius: var(--radius); overflow: hidden;
-  border: 1px solid var(--panel-line); background: #1a1a1a;
+  border: 1px solid var(--panel-line); background: #525659;
   height: min(85vh, 920px);
 }
-.resume-frame object { width: 100%; height: 100%; border: 0; display: block; }
-.resume-fallback { display: grid; place-items: center; gap: 16px; height: 100%; padding: 40px; text-align: center; color: var(--muted); }
+.resume-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+.resume-note { color: var(--muted); font-size: 14px; margin-top: 12px; }
+.resume-note a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.resume-note a:hover { color: var(--text); }
 
 .btn {
   display: inline-flex; align-items: center; gap: 9px;
