@@ -1,0 +1,189 @@
+%-------------------------
+% Resume in LaTeX
+% Based on the popular "Jake's Resume" template
+% License: MIT
+%------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\usepackage{iftex}
+\ifPDFTeX
+  \input{glyphtounicode}
+\fi
+
+% Adjust margins
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.9in}
+\addtolength{\textheight}{1.9in}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Section formatting
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-6pt}]
+
+% Ensure that generate pdf is machine readable/ATS parsable
+\ifPDFTeX
+  \pdfgentounicode=1
+\fi
+
+%-------------------------
+% Custom commands
+\newcommand{\resumeItem}[1]{
+  \item\small{
+    {#1 \vspace{-2.5pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-8pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-8pt}
+}
+
+\newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-4pt}}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-6pt}}
+
+%-------------------------------------------
+%%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+    \textbf{\Huge \scshape Prasanna Govindarajulu Sairam} \\ \vspace{1pt}
+    \small (585) 485-2224 $|$ \href{mailto:govinda2@buffalo.edu}{\underline{govinda2@buffalo.edu}} $|$ Buffalo, NY $|$
+    \href{https://www.linkedin.com/in/prasanna-sairam-a00241290/}{\underline{linkedin.com/in/prasanna-sairam}} $|$
+    \href{https://github.com/prasannaman44}{\underline{github.com/prasannaman44}}
+\end{center}
+
+
+%-----------EDUCATION-----------
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {University at Buffalo, School of Engineering and Applied Sciences}{Expected May 2027}
+      {Bachelor of Science in Computer Science}{}
+    \resumeItemListStart
+      \resumeItem{\textbf{Relevant Coursework:} Object-Oriented Programming \& Data Structures, Algorithms \& Complexity, Systems Programming, Computer Organization, Web Applications, Probability \& Statistics}
+    \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+
+%-----------EXPERIENCE-----------
+\section{Experience}
+  \resumeSubHeadingListStart
+
+    \resumeSubheading
+      {Quantitative Research \& AI Engineering Intern}{Jun 2026 -- Present}
+      {Tekly Studio}{Remote}
+      \resumeItemListStart
+        \resumeItem{Built an end-to-end machine learning pipeline in Python (pandas, NumPy, scikit-learn, XGBoost) to predict 7-day directional returns across $\sim$489 cryptocurrencies ($\sim$320K daily observations), spanning feature engineering, model tuning, backtesting, and production signal generation.}
+        \resumeItem{Applied rigorous financial-ML validation --- purged K-fold and walk-forward cross-validation, train-only imputation, and point-in-time correctness --- to prevent data leakage and look-ahead bias; validation methodology passed a line-by-line technical review.}
+        \resumeItem{Diagnosed and fixed a production survivorship-bias bug in which delisted assets' stale prices surfaced as current trading signals, implementing a point-in-time universe filter; the issue was highlighted cohort-wide as a genuine production find.}
+        \resumeItem{Productionized the research model into a command-line script emitting standardized JSON trading signals, and managed the full Git branch / pull request / code-review workflow, iterating on detailed reviewer feedback.}
+      \resumeItemListEnd
+
+  \resumeSubHeadingListEnd
+
+
+%-----------PROJECTS-----------
+\section{Projects}
+    \resumeSubHeadingListStart
+
+      \resumeProjectHeading
+          {\textbf{Backend Web Server} $|$ \emph{Python, MongoDB, WebSockets, bcrypt}}{Sep -- Dec 2025}
+          \resumeItemListStart
+            \resumeItem{Built a custom HTTP server in Python from scratch, handling request parsing, routing, and response generation without high-level web frameworks.}
+            \resumeItem{Designed RESTful API endpoints supporting user authentication, real-time chat messaging, and file uploads.}
+            \resumeItem{Implemented secure session management with hashed cookies and bcrypt password hashing to protect user credentials.}
+            \resumeItem{Integrated MongoDB to store users, chat history, and media, and added WebSocket handshakes to enable real-time messaging.}
+          \resumeItemListEnd
+
+      \resumeProjectHeading
+          {\textbf{Escape from UB (Horror Survival Game)} $|$ \emph{Unreal Engine}}{Nov -- Dec 2025}
+          \resumeItemListStart
+            \resumeItem{Designed and built a horror survival game inspired by Five Nights at Freddy's, featuring camera surveillance, enemy AI, and player resource management.}
+            \resumeItem{Implemented core gameplay systems including AI pathing, timed enemy movement, jumpscare triggers, and fail-state logic to build player tension.}
+            \resumeItem{Created interactive UI elements such as camera feeds, control panels, and status indicators.}
+          \resumeItemListEnd
+
+      \resumeProjectHeading
+          {\textbf{OCaml Interpreter} $|$ \emph{OCaml}}{Oct -- Dec 2024}
+          \resumeItemListStart
+            \resumeItem{Built a stack-based interpreter for an OCaml-like bytecode language supporting arithmetic, boolean logic, strings, control flow, and error handling.}
+            \resumeItem{Implemented first-class functions and closures, including recursion, higher-order functions, and lexical environment capture.}
+            \resumeItem{Added support for function calls, returns, and in/out parameters, correctly restoring stack and environment state across calls.}
+          \resumeItemListEnd
+
+      \resumeProjectHeading
+          {\textbf{Memory Allocator} $|$ \emph{C}}{Nov -- Dec 2024}
+          \resumeItemListStart
+            \resumeItem{Developed a custom memory allocator in C, implementing malloc, free, calloc, and realloc.}
+            \resumeItem{Emphasized multi-pool and bulk allocation strategies for efficient memory reuse.}
+          \resumeItemListEnd
+
+      \resumeProjectHeading
+          {\textbf{Song Rater} $|$ \emph{Java}}{Feb -- Mar 2024}
+          \resumeItemListStart
+            \resumeItem{Built a Java application for rating songs, supporting adding, removing, and averaging ratings across multiple entries.}
+            \resumeItem{Wrote comprehensive test cases covering standard and edge cases to validate functionality.}
+          \resumeItemListEnd
+
+    \resumeSubHeadingListEnd
+
+
+%-----------TECHNICAL SKILLS-----------
+\section{Technical Skills}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+     \textbf{Languages}{: Python, Java, C, OCaml, JavaScript, HTML/CSS} \\
+     \textbf{ML \& Data}{: pandas, NumPy, scikit-learn, XGBoost, Jupyter} \\
+     \textbf{Tools \& Technologies}{: Git, MongoDB, WebSockets, bcrypt, Unreal Engine, IntelliJ IDEA} \\
+     \textbf{Concepts}{: Machine Learning, Data Pipelines, Model Validation \& Backtesting, REST APIs, Backend Development, Systems Programming, Memory Management, Object-Oriented Programming, Data Structures \& Algorithms} \\
+    }}
+ \end{itemize}
+
+
+%-------------------------------------------
+\end{document}
