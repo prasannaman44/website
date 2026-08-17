@@ -10,10 +10,10 @@ const DEFAULT_IMAGE = '/profile.jpg'
 const PROFILE = {
   name: 'Prasanna Sairam',
   fullName: 'Prasanna Govindarajulu Sairam',
-  role: 'Backend & Systems Engineer',
+  role: 'Backend, Systems & ML Engineer',
   thesis: 'I build the layers most people import.',
-  bio: "Computer Science student at the University at Buffalo with a backend and systems focus. I've written an HTTP server, a bytecode interpreter, and a memory allocator from scratch — because the fastest way to understand a tool is to build it yourself.",
-  email: 'prasannasairam05@gmail.com',
+  bio: "Computer Science student at the University at Buffalo with a backend and systems focus. I've written an HTTP server, a bytecode interpreter, and a memory allocator from scratch — because the fastest way to understand a tool is to build it yourself. Right now I'm pointing that same instinct at quantitative research, building production ML pipelines over crypto market data at Tekly Studio.",
+  email: 'govinda2@buffalo.edu',
   phone: '(585) 485-2224',
   location: 'Buffalo, NY',
   github: 'https://github.com/prasannaman44',
@@ -24,17 +24,23 @@ const PROFILE = {
 
 const STATUS = {
   available: true,
-  headline: 'Open to Summer 2026 internships',
-  focus: ['Backend', 'Systems', 'Distributed Systems'],
+  headline: 'Interning at Tekly Studio — open to 2027 new-grad roles',
+  focus: ['Backend', 'Systems', 'Machine Learning'],
 }
 
 const STATS = [
+  { num: '~489', label: 'assets in a production ML pipeline' },
   { num: '5', label: 'projects shipped' },
   { num: '3', label: 'systems built from scratch' },
-  { num: '6', label: 'languages' },
 ]
 
 const HIGHLIGHTS = [
+  {
+    title: 'Production ML for crypto markets',
+    blurb:
+      'Built an end-to-end pipeline predicting 7-day directional returns across ~489 assets — then caught a survivorship-bias bug that was leaking delisted coins into live trading signals.',
+    tags: ['Python', 'XGBoost', 'scikit-learn'],
+  },
   {
     title: 'A web server with no framework',
     blurb:
@@ -61,11 +67,28 @@ const HIGHLIGHTS = [
   },
 ]
 
+const EXPERIENCE = [
+  {
+    role: 'Quantitative Research & AI Engineering Intern',
+    company: 'Tekly Studio',
+    location: 'Remote',
+    date: 'Jun 2026 – Present',
+    current: true,
+    bullets: [
+      'Built an end-to-end machine learning pipeline in Python (pandas, NumPy, scikit-learn, XGBoost) to predict 7-day directional returns across ~489 cryptocurrencies (~320K daily observations), spanning feature engineering, model tuning, backtesting, and production signal generation.',
+      'Applied rigorous financial-ML validation — purged K-fold and walk-forward cross-validation, train-only imputation, and point-in-time correctness — to prevent data leakage and look-ahead bias; validation methodology passed a line-by-line technical review.',
+      "Diagnosed and fixed a production survivorship-bias bug in which delisted assets' stale prices surfaced as current trading signals, implementing a point-in-time universe filter; the issue was highlighted cohort-wide as a genuine production find.",
+      'Productionized the research model into a command-line script emitting standardized JSON trading signals, and managed the full Git branch / pull request / code-review workflow, iterating on detailed reviewer feedback.',
+    ],
+    tags: ['Python', 'pandas', 'scikit-learn', 'XGBoost'],
+  },
+]
+
 const EDUCATION = {
   school: 'University at Buffalo',
   detail: 'School of Engineering and Applied Sciences',
   degree: 'B.S. in Computer Science',
-  graduation: 'Expected Spring 2027',
+  graduation: 'Expected May 2027',
   coursework: [
     'Object-Oriented Programming & Data Structures',
     'Algorithms & Complexity',
@@ -136,18 +159,26 @@ const PROJECTS = [
 const SKILLS = [
   {
     group: 'Languages',
-    context: 'What I write in. The systems work lives in C and OCaml; the web work in Python and JavaScript.',
-    items: ['Java', 'Python', 'C', 'C++', 'OCaml', 'JavaScript', 'HTML/CSS'],
+    context: 'What I write in. Python for the ML and backend work; C, C++, and OCaml for the systems side.',
+    items: ['Python', 'Java', 'C', 'C++', 'OCaml', 'JavaScript', 'HTML/CSS'],
+  },
+  {
+    group: 'ML & Data',
+    context: 'The research stack behind the quant work — feature engineering, model tuning, and backtesting.',
+    items: ['pandas', 'NumPy', 'scikit-learn', 'XGBoost', 'Jupyter'],
   },
   {
     group: 'Tools & Technologies',
     context: 'The stack behind the projects — data, real-time transport, auth, and the editors I live in.',
-    items: ['MongoDB', 'WebSockets', 'bcrypt', 'Git', 'Unreal Engine', 'IntelliJ IDEA'],
+    items: ['Git', 'MongoDB', 'WebSockets', 'bcrypt', 'Unreal Engine', 'IntelliJ IDEA'],
   },
   {
     group: 'Concepts',
-    context: 'The ideas I keep coming back to: how requests are served, how memory is managed, how programs are structured.',
+    context: 'The ideas I keep coming back to: how requests are served, how memory is managed, how models earn trust.',
     items: [
+      'Machine Learning',
+      'Data Pipelines',
+      'Model Validation & Backtesting',
       'REST APIs',
       'Backend Development',
       'Systems Programming',
@@ -161,6 +192,7 @@ const SKILLS = [
 const NAV = [
   { id: 'home', label: 'Home' },
   { id: 'highlights', label: 'Highlights' },
+  { id: 'experience', label: 'Experience' },
   { id: 'resume', label: 'Résumé' },
   { id: 'projects', label: 'Projects' },
   { id: 'skills', label: 'Skills' },
@@ -611,7 +643,7 @@ export default function App() {
             <header className="section-head reveal">
               <span className="section-id mono">/ highlights</span>
               <h2>The work I'm proudest of</h2>
-              <p className="section-lead">Four projects that show how I think — start at the bottom of the stack and build up.</p>
+              <p className="section-lead">The work that shows how I think — from production ML down to my own malloc.</p>
             </header>
             <div className="highlight-grid">
               {HIGHLIGHTS.map((h) => (
@@ -620,6 +652,48 @@ export default function App() {
                   <p>{h.blurb}</p>
                   <div className="tag-row">
                     {h.tags.map((t) => (
+                      <span className="tag" key={t}>{t}</span>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          {/* EXPERIENCE ------------------------------------------------- */}
+          <section id="experience" className="section">
+            <header className="section-head reveal">
+              <span className="section-id mono">/ experience</span>
+              <h2>Where I'm working</h2>
+              <p className="section-lead">Research and engineering on live market data.</p>
+            </header>
+
+            <div className="exp-list">
+              {EXPERIENCE.map((job) => (
+                <article className="exp-card reveal" key={`${job.company}-${job.role}`}>
+                  <div className="exp-top">
+                    <div className="exp-id">
+                      <h3>{job.role}</h3>
+                      <p className="exp-company">
+                        {job.company}
+                        <span className="exp-sep">·</span>
+                        <span className="exp-location">{job.location}</span>
+                      </p>
+                    </div>
+                    <span className={`exp-date mono${job.current ? ' current' : ''}`}>
+                      {job.current && <span className="pulse" />}
+                      {job.date}
+                    </span>
+                  </div>
+
+                  <ul className="project-bullets">
+                    {job.bullets.map((b, i) => (
+                      <li key={i}>{b}</li>
+                    ))}
+                  </ul>
+
+                  <div className="tag-row">
+                    {job.tags.map((t) => (
                       <span className="tag" key={t}>{t}</span>
                     ))}
                   </div>
@@ -1090,6 +1164,31 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 .choice-arrow { color: var(--muted); transition: transform 0.25s, color 0.25s; flex: none; }
 .choice:hover .choice-arrow { transform: translateX(4px); color: var(--text); }
 
+/* Experience ------------------------------------------------------------- */
+.exp-list { display: flex; flex-direction: column; gap: 16px; }
+.exp-card {
+  padding: 28px; border-radius: var(--radius);
+  background: var(--panel); border: 1px solid var(--panel-line);
+  border-left: 3px solid var(--accent);
+  transition: transform 0.25s, border-color 0.25s;
+}
+.exp-card:hover { transform: translateY(-2px); }
+.exp-top {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 18px;
+}
+.exp-card h3 { font-size: 21px; }
+.exp-company { color: var(--accent); font-size: 15px; margin-top: 5px; font-weight: 600; }
+.exp-sep { color: var(--muted-2); margin: 0 8px; font-weight: 400; }
+.exp-location { color: var(--muted); font-weight: 400; }
+.exp-date {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--muted); font-size: 12.5px; white-space: nowrap;
+  padding: 6px 12px; border-radius: 999px;
+  background: var(--bg-2); border: 1px solid var(--panel-line);
+}
+.exp-date.current { color: var(--green); border-color: rgba(61, 220, 132, 0.3); background: rgba(61, 220, 132, 0.08); }
+
 /* Highlights ------------------------------------------------------------- */
 .highlight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .highlight-card {
@@ -1278,6 +1377,8 @@ button.tag:hover, .tag-active { background: var(--accent); color: #04122e; }
   .section { padding: 64px 0; }
   .choices, .highlight-grid { grid-template-columns: 1fr; }
   .project { grid-template-columns: 1fr; gap: 14px; padding: 22px; }
+  .exp-card { padding: 22px; }
+  .exp-card h3 { font-size: 18px; }
   .project-side { flex-direction: row; align-items: baseline; gap: 14px; }
   .stats { gap: 28px; }
 }
