@@ -13,7 +13,10 @@ const PROFILE = {
   role: 'Backend, Systems & ML Engineer',
   thesis: 'I build the layers most people import.',
   bio: "Computer Science student at the University at Buffalo with a backend and systems focus. I've written an HTTP server, a bytecode interpreter, and a memory allocator from scratch — because the fastest way to understand a tool is to build it yourself. Right now I'm pointing that same instinct at quantitative research, building production ML pipelines over crypto market data at Tekly Studio.",
-  email: 'govinda2@buffalo.edu',
+  emails: [
+    { address: 'govinda2@buffalo.edu', label: 'University' },
+    { address: 'prasannasairam05@gmail.com', label: 'Personal' },
+  ],
   phone: '(585) 485-2224',
   location: 'Buffalo, NY',
   github: 'https://github.com/prasannaman44',
@@ -396,7 +399,7 @@ export default function App() {
   const [progress, setProgress] = useState(0)
   const [photo, setPhoto] = useState(DEFAULT_IMAGE)
   const [filter, setFilter] = useState('All')
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState(null)
   const fileInput = useRef(null)
   const resumeWrap = useRef(null)
   const scrollRaf = useRef(0)
@@ -487,13 +490,13 @@ export default function App() {
     reader.readAsDataURL(file)
   }
 
-  const copyEmail = async () => {
+  const copyEmail = async (email) => {
     try {
-      await navigator.clipboard.writeText(PROFILE.email)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1800)
+      await navigator.clipboard.writeText(email)
+      setCopied(email)
+      setTimeout(() => setCopied((current) => (current === email ? null : current)), 1800)
     } catch {
-      window.location.href = `mailto:${PROFILE.email}`
+      window.location.href = `mailto:${email}`
     }
   }
 
@@ -584,7 +587,7 @@ export default function App() {
               <a href={PROFILE.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="interactive">
                 {Icon.linkedin()}
               </a>
-              <a href={`mailto:${PROFILE.email}`} aria-label="Email" className="interactive">
+              <a href={`mailto:${PROFILE.emails[0].address}`} aria-label="Email" className="interactive">
                 {Icon.mail()}
               </a>
             </div>
@@ -853,12 +856,24 @@ export default function App() {
             </header>
 
             <div className="contact-card reveal">
-              <button className="email-copy interactive" onClick={copyEmail}>
-                <span className="email-text mono">{PROFILE.email}</span>
-                <span className={`copy-state${copied ? ' done' : ''}`}>
-                  {copied ? (<>{Icon.check()} Copied</>) : (<>{Icon.copy()} Copy</>)}
-                </span>
-              </button>
+              <div className="email-list">
+                {PROFILE.emails.map(({ address, label }) => (
+                  <button
+                    key={address}
+                    className="email-copy interactive"
+                    onClick={() => copyEmail(address)}
+                    aria-label={`Copy ${label.toLowerCase()} email address`}
+                  >
+                    <span className="email-details">
+                      <span className="email-label">{label}</span>
+                      <span className="email-text mono">{address}</span>
+                    </span>
+                    <span className={`copy-state${copied === address ? ' done' : ''}`}>
+                      {copied === address ? (<>{Icon.check()} Copied</>) : (<>{Icon.copy()} Copy</>)}
+                    </span>
+                  </button>
+                ))}
+              </div>
 
               <div className="contact-meta">
                 <span className="meta-item">{Icon.phone()} {PROFILE.phone}</span>
@@ -866,9 +881,15 @@ export default function App() {
               </div>
 
               <div className="contact-buttons">
-                <a className="btn btn-accent interactive" href={`mailto:${PROFILE.email}`}>
-                  {Icon.mail()} Email me
-                </a>
+                {PROFILE.emails.map(({ address, label }, index) => (
+                  <a
+                    key={address}
+                    className={`btn ${index === 0 ? 'btn-accent' : 'btn-ghost'} interactive`}
+                    href={`mailto:${address}`}
+                  >
+                    {Icon.mail()} {label} email
+                  </a>
+                ))}
                 <a className="btn btn-ghost interactive" href={PROFILE.github} target="_blank" rel="noopener noreferrer">
                   {Icon.github()} GitHub
                 </a>
@@ -1320,6 +1341,7 @@ button.tag:hover, .tag-active { background: var(--accent); color: #04122e; }
   background: var(--panel); border: 1px solid var(--panel-line);
   max-width: 620px;
 }
+.email-list { display: grid; gap: 10px; }
 .email-copy {
   display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%;
   padding: 16px 18px; border-radius: 12px; cursor: pointer;
@@ -1327,6 +1349,8 @@ button.tag:hover, .tag-active { background: var(--accent); color: #04122e; }
   color: var(--text); transition: border-color 0.2s;
 }
 .email-copy:hover { border-color: var(--accent); }
+.email-details { display: grid; gap: 4px; text-align: left; min-width: 0; }
+.email-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
 .email-text { font-size: 16px; }
 .copy-state { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); white-space: nowrap; }
 .copy-state.done { color: var(--green); }
@@ -1388,5 +1412,8 @@ button.tag:hover, .tag-active { background: var(--accent); color: #04122e; }
   .side-social { display: none; }
   .stat-num { font-size: 30px; }
   .resume-frame { height: 70vh; }
+  .contact-card { padding: 22px; }
+  .email-copy { align-items: flex-start; padding: 14px; }
+  .email-text { font-size: 13px; overflow-wrap: anywhere; }
 }
 `
