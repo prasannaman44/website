@@ -284,12 +284,6 @@ const Icon = {
       <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.8 2z" />
     </svg>
   ),
-  camera: (p) => (
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...p}>
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-      <circle cx="12" cy="13" r="4" />
-    </svg>
-  ),
 }
 
 /* ============================================================================
@@ -402,14 +396,33 @@ function useReveal() {
 export default function App() {
   const [active, setActive] = useState('home')
   const [progress, setProgress] = useState(0)
-  const [photo, setPhoto] = useState(DEFAULT_IMAGE)
+  const [photoOpen, setPhotoOpen] = useState(false)
   const [filter, setFilter] = useState('All')
   const [copied, setCopied] = useState(null)
-  const fileInput = useRef(null)
+  const avatarButton = useRef(null)
   const resumeWrap = useRef(null)
   const scrollRaf = useRef(0)
 
   useReveal()
+
+  useEffect(() => {
+    if (!photoOpen) return
+
+    const previousOverflow = document.body.style.overflow
+    const trigger = avatarButton.current
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setPhotoOpen(false)
+    }
+
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', closeOnEscape)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+      trigger?.focus()
+    }
+  }, [photoOpen])
 
   // Scroll progress bar + "at page bottom highlights the last nav item"
   useEffect(() => {
@@ -487,14 +500,6 @@ export default function App() {
     goTo('projects')
   }
 
-  const onPhoto = (e) => {
-    const file = e.target.files && e.target.files[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => setPhoto(ev.target.result)
-    reader.readAsDataURL(file)
-  }
-
   const copyEmail = async (email) => {
     try {
       await navigator.clipboard.writeText(email)
@@ -514,11 +519,6 @@ export default function App() {
     }
   }
 
-  const initials = PROFILE.name
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-
   const filteredProjects =
     filter === 'All' ? PROJECTS : PROJECTS.filter((p) => p.tags.includes(filter))
   const featuredProject = filteredProjects.find((p) => p.featured)
@@ -531,6 +531,29 @@ export default function App() {
       <style>{CSS}</style>
       <CustomCursor />
 
+      {photoOpen && (
+        <div className="photo-lightbox" onClick={() => setPhotoOpen(false)}>
+          <div
+            className="photo-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Enlarged portrait of Prasanna Sairam"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              className="photo-close interactive"
+              onClick={() => setPhotoOpen(false)}
+              aria-label="Close enlarged photo"
+              autoFocus
+            >
+              ×
+            </button>
+            <img src={DEFAULT_IMAGE} alt="Prasanna Sairam" />
+            <p>Prasanna Sairam</p>
+          </div>
+        </div>
+      )}
+
       <div className="progress" style={{ width: `${progress}%` }} aria-hidden="true" />
 
       <a className="skip-link" href="#home">Skip to content</a>
@@ -542,25 +565,17 @@ export default function App() {
         <aside className="sidebar">
           <div className="sidebar-inner">
             <button
+              ref={avatarButton}
               className="avatar interactive"
-              onClick={() => fileInput.current && fileInput.current.click()}
-              title="Upload a profile photo"
-              aria-label="Upload a profile photo"
+              onClick={() => setPhotoOpen(true)}
+              title="View a larger photo"
+              aria-label="View a larger photo of Prasanna Sairam"
+              aria-haspopup="dialog"
+              aria-expanded={photoOpen}
             >
-              {photo ? (
-                <img src={photo} alt="Prasanna Sairam" />
-              ) : (
-                <span className="avatar-initials">{initials}</span>
-              )}
-              <span className="avatar-cam">{Icon.camera()}</span>
+              <img src={DEFAULT_IMAGE} alt="Prasanna Sairam" />
+              <span className="avatar-expand">{Icon.expand()}</span>
             </button>
-            <input
-              ref={fileInput}
-              type="file"
-              accept="image/*"
-              onChange={onPhoto}
-              hidden
-            />
 
             <div className="side-id">
               <h1 className="side-name">{PROFILE.name}</h1>
@@ -1067,6 +1082,38 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 .cursor-down .cursor-ring { width: 26px; height: 26px; margin: -13px 0 0 -13px; }
 .cursor-hidden .cursor-dot, .cursor-hidden .cursor-ring, .cursor-hidden .cursor-glow { opacity: 0; }
 
+/* Portrait lightbox ------------------------------------------------------ */
+.photo-lightbox {
+  position: fixed; inset: 0; z-index: 925;
+  display: grid; place-items: center; padding: 24px;
+  background: rgba(2, 7, 18, 0.9);
+  backdrop-filter: blur(14px);
+  animation: lightbox-in 0.22s ease both;
+}
+.photo-dialog {
+  position: relative; width: min(440px, 88vw);
+  animation: portrait-in 0.28s ease both;
+}
+.photo-dialog img {
+  display: block; width: 100%; aspect-ratio: 1; object-fit: cover;
+  border-radius: 32px; border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 35px 90px rgba(0,0,0,0.55), 0 0 0 1px rgba(91,140,255,0.12);
+}
+.photo-dialog p { margin-top: 14px; color: var(--muted); font-family: var(--mono); font-size: 13px; text-align: center; }
+.photo-close {
+  position: absolute; z-index: 1; top: 14px; right: 14px;
+  width: 42px; height: 42px; border-radius: 50%;
+  display: grid; place-items: center;
+  color: var(--text); background: rgba(8,18,41,0.82);
+  border: 1px solid rgba(255,255,255,0.18);
+  font-family: var(--sans); font-size: 29px; font-weight: 300; line-height: 1;
+  transition: transform 0.2s, background 0.2s, border-color 0.2s;
+}
+.photo-close:hover { transform: rotate(6deg) scale(1.05); background: var(--accent); border-color: var(--accent); color: #04122e; }
+@keyframes lightbox-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes portrait-in { from { opacity: 0; transform: translateY(12px) scale(0.97); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .photo-lightbox, .photo-dialog { animation: none; } }
+
 /* Layout ----------------------------------------------------------------- */
 .layout { display: block; }
 
@@ -1096,15 +1143,15 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 }
 .avatar:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 10px 30px rgba(91, 140, 255, 0.25); }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
-.avatar-initials { font-family: var(--mono); font-size: 30px; font-weight: 600; color: var(--accent); }
-.avatar-cam {
+.avatar-expand {
   position: absolute; right: 5px; bottom: 5px;
-  width: 24px; height: 24px; border-radius: 8px;
+  width: 30px; height: 30px; border-radius: 9px;
   background: rgba(8, 18, 41, 0.82); color: var(--text);
   display: grid; place-items: center;
   opacity: 0; transition: opacity 0.2s;
 }
-.avatar:hover .avatar-cam { opacity: 1; }
+.avatar-expand svg { width: 15px; height: 15px; }
+.avatar:hover .avatar-expand, .avatar:focus-visible .avatar-expand { opacity: 1; }
 
 .side-name { font-size: 25px; }
 .side-role { color: var(--accent); font-size: 13px; margin-top: 5px; letter-spacing: 0; }
@@ -1469,8 +1516,7 @@ button.tag:hover, .tag-active { background: var(--accent); color: #04122e; }
   }
   .sidebar-inner { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 14px; min-height: 0; width: 100%; }
   .avatar { width: 52px; height: 52px; border-radius: 15px; flex: none; }
-  .avatar-initials { font-size: 15px; }
-  .avatar-cam { display: none; }
+  .avatar-expand { display: none; }
   .side-id { flex: 1 1 auto; min-width: 0; }
   .side-name { font-size: 17px; white-space: nowrap; }
   .side-role, .badge-available { display: none; }
