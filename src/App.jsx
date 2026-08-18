@@ -114,6 +114,11 @@ const PROJECTS = [
       'Implemented secure session management with hashed cookies and bcrypt password hashing to protect user credentials.',
       'Integrated MongoDB for users, chat history, and media, and added WebSocket handshakes to enable real-time messaging.',
     ],
+    caseStudy: {
+      challenge: 'Build a secure, real-time web backend without hiding the hard parts behind a framework.',
+      approach: 'Implemented raw HTTP parsing and routing, REST endpoints, bcrypt-backed sessions, MongoDB persistence, file uploads, and the WebSocket handshake in Python.',
+      result: 'Delivered authentication, media handling, and live chat while gaining a layer-by-layer understanding of how web requests become application behavior.',
+    },
   },
   {
     id: '02',
@@ -125,6 +130,11 @@ const PROJECTS = [
       'Implemented first-class functions and closures, including recursion, higher-order functions, and lexical environment capture.',
       'Added support for function calls, returns, and in/out parameters, correctly restoring stack and environment state across calls.',
     ],
+    caseStudy: {
+      challenge: 'Support closures, recursion, and function calls without corrupting stack or environment state.',
+      approach: 'Modeled lexical environments and call frames explicitly, then implemented capture, restoration, returns, and in/out parameter behavior.',
+      result: 'Produced a working interpreter that preserves scope correctly across higher-order and recursive calls.',
+    },
   },
   {
     id: '03',
@@ -135,6 +145,11 @@ const PROJECTS = [
       'Developed a custom memory allocator in C, implementing malloc, free, calloc, and realloc.',
       'Emphasized multi-pool and bulk allocation strategies for efficient memory reuse.',
     ],
+    caseStudy: {
+      challenge: 'Recreate the core allocation API while safely reusing memory across different request sizes.',
+      approach: 'Implemented separate allocation pools and bulk-allocation paths, with matching free, calloc, and realloc behavior.',
+      result: 'Built a functional allocator that exposes the tradeoffs behind memory reuse, fragmentation, and resizing.',
+    },
   },
   {
     id: '04',
@@ -142,6 +157,7 @@ const PROJECTS = [
     date: 'Nov – Dec 2025',
     featured: true,
     image: '/escape-from-ub.png',
+    video: '/escape-from-ub-preview.mp4',
     imageAlt: 'Escape from UB gameplay showing the enemy encounter, battery meter, flash control, and map UI',
     summary:
       'A first-person survival-horror experience where every camera check, flash, and route choice costs time and battery.',
@@ -151,6 +167,11 @@ const PROJECTS = [
       'Implemented core gameplay systems including AI pathing, timed enemy movement, jumpscare triggers, and fail-state logic to build player tension.',
       'Created interactive UI elements such as camera feeds, control panels, and status indicators.',
     ],
+    caseStudy: {
+      challenge: 'Create sustained tension using limited information, battery life, and enemy movement rather than constant action.',
+      approach: 'Combined timed AI pathing, camera surveillance, flash and battery systems, a route map, jumpscare triggers, and fail-state logic in Unreal Engine.',
+      result: 'Delivered a playable survival loop where each camera check and defensive choice carries a visible resource cost.',
+    },
   },
   {
     id: '05',
@@ -161,6 +182,11 @@ const PROJECTS = [
       'Built a Java application for rating songs, supporting adding, removing, and averaging ratings across multiple entries.',
       'Wrote comprehensive test cases covering standard and edge cases to validate functionality.',
     ],
+    caseStudy: {
+      challenge: 'Keep rating operations predictable as entries are added, removed, and averaged across edge cases.',
+      approach: 'Designed a small Java domain model around rating operations and backed it with focused standard and edge-case tests.',
+      result: 'Produced a reliable application with behavior validated by an explicit test suite.',
+    },
   },
 ]
 
@@ -294,6 +320,7 @@ function CustomCursor() {
   const dot = useRef(null)
   const ring = useRef(null)
   const glow = useRef(null)
+  const label = useRef(null)
   const raf = useRef(0)
 
   useEffect(() => {
@@ -305,25 +332,66 @@ function CustomCursor() {
     const target = { x: window.innerWidth / 2, y: window.innerHeight / 2 }
     const ringPos = { ...target }
     let hovering = false
+    let context = { label: '', tone: 'blue' }
+    let overrideTimer = 0
+    let pulseTimer = 0
 
     const isInteractive = (el) =>
       !!(el && el.closest && el.closest('a, button, [role="button"], input, label, .interactive'))
 
+    const applyContext = (nextLabel = '', tone = 'blue') => {
+      if (label.current) label.current.textContent = nextLabel
+      document.body.classList.toggle('cursor-has-label', Boolean(nextLabel))
+      document.body.dataset.cursorTone = tone
+    }
+
     const onMove = (e) => {
-      target.x = e.clientX
-      target.y = e.clientY
       const next = isInteractive(e.target)
       if (next !== hovering) {
         hovering = next
         document.body.classList.toggle('cursor-hover', hovering)
       }
+
+      const contextEl = e.target.closest?.('[data-cursor]')
+      context = {
+        label: contextEl?.dataset.cursor || '',
+        tone: contextEl?.dataset.cursorTone || 'blue',
+      }
+      if (!overrideTimer) applyContext(context.label, context.tone)
+
+      const magneticEl = e.target.closest?.('[data-cursor-magnetic]')
+      if (magneticEl) {
+        const rect = magneticEl.getBoundingClientRect()
+        target.x = e.clientX + (rect.left + rect.width / 2 - e.clientX) * 0.22
+        target.y = e.clientY + (rect.top + rect.height / 2 - e.clientY) * 0.22
+      } else {
+        target.x = e.clientX
+        target.y = e.clientY
+      }
+
       if (dot.current) dot.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`
       if (glow.current) glow.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`
+      if (label.current) label.current.style.transform = `translate(${e.clientX + 20}px, ${e.clientY + 18}px)`
     }
-    const onDown = () => document.body.classList.add('cursor-down')
+    const onDown = () => {
+      document.body.classList.add('cursor-down')
+      document.body.classList.remove('cursor-pulse')
+      requestAnimationFrame(() => document.body.classList.add('cursor-pulse'))
+      clearTimeout(pulseTimer)
+      pulseTimer = setTimeout(() => document.body.classList.remove('cursor-pulse'), 420)
+    }
     const onUp = () => document.body.classList.remove('cursor-down')
     const onLeave = () => document.body.classList.add('cursor-hidden')
     const onEnter = () => document.body.classList.remove('cursor-hidden')
+    const onMessage = (event) => {
+      const detail = event.detail || {}
+      clearTimeout(overrideTimer)
+      applyContext(detail.label || '', detail.tone || 'green')
+      overrideTimer = setTimeout(() => {
+        overrideTimer = 0
+        applyContext(context.label, context.tone)
+      }, detail.duration || 900)
+    }
 
     const loop = () => {
       ringPos.x += (target.x - ringPos.x) * 0.18
@@ -338,6 +406,7 @@ function CustomCursor() {
     window.addEventListener('mouseup', onUp)
     document.addEventListener('mouseleave', onLeave)
     document.addEventListener('mouseenter', onEnter)
+    window.addEventListener('cursor-message', onMessage)
 
     return () => {
       cancelAnimationFrame(raf.current)
@@ -346,7 +415,11 @@ function CustomCursor() {
       window.removeEventListener('mouseup', onUp)
       document.removeEventListener('mouseleave', onLeave)
       document.removeEventListener('mouseenter', onEnter)
-      document.body.classList.remove('has-custom-cursor', 'cursor-hover', 'cursor-down', 'cursor-hidden')
+      window.removeEventListener('cursor-message', onMessage)
+      clearTimeout(overrideTimer)
+      clearTimeout(pulseTimer)
+      document.body.classList.remove('has-custom-cursor', 'cursor-hover', 'cursor-down', 'cursor-hidden', 'cursor-has-label', 'cursor-pulse')
+      delete document.body.dataset.cursorTone
     }
   }, [])
 
@@ -355,6 +428,7 @@ function CustomCursor() {
       <div ref={glow} className="cursor-glow" aria-hidden="true" />
       <div ref={ring} className="cursor-ring" aria-hidden="true" />
       <div ref={dot} className="cursor-dot" aria-hidden="true" />
+      <div ref={label} className="cursor-label mono" aria-hidden="true" />
     </>
   )
 }
@@ -389,6 +463,76 @@ function useReveal() {
   }, [])
 }
 
+function ProjectCaseStudy({ project, expanded, onToggle }) {
+  const panelId = `project-case-study-${project.id}`
+  return (
+    <div className="case-study-wrap">
+      <button
+        className={`case-study-toggle interactive${expanded ? ' open' : ''}`}
+        onClick={onToggle}
+        aria-expanded={expanded}
+        aria-controls={panelId}
+        data-cursor={expanded ? 'CLOSE' : 'DETAILS'}
+        data-cursor-tone="amber"
+        data-cursor-magnetic
+      >
+        <span>{expanded ? 'Close technical breakdown' : 'View technical breakdown'}</span>
+        {Icon.arrow()}
+      </button>
+      {expanded && (
+        <div className="case-study" id={panelId}>
+          {[
+            ['Challenge', project.caseStudy.challenge],
+            ['Approach', project.caseStudy.approach],
+            ['Result', project.caseStudy.result],
+          ].map(([label, text]) => (
+            <div className="case-study-step" key={label}>
+              <span className="case-study-label mono">{label}</span>
+              <p>{text}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function FeaturedPreview({ project }) {
+  const video = useRef(null)
+
+  const playPreview = () => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    video.current?.play().catch(() => {})
+  }
+
+  const resetPreview = () => {
+    if (!video.current) return
+    video.current.pause()
+    video.current.currentTime = 0
+  }
+
+  return (
+    <div
+      className="featured-media interactive"
+      tabIndex="0"
+      aria-label={`${project.imageAlt}. Hover or focus to animate the preview.`}
+      onMouseEnter={playPreview}
+      onMouseLeave={resetPreview}
+      onFocus={playPreview}
+      onBlur={resetPreview}
+      data-cursor="EXPLORE"
+      data-cursor-tone="red"
+      data-cursor-magnetic
+    >
+      <video ref={video} muted loop playsInline preload="metadata" poster={project.image} aria-hidden="true">
+        <source src={project.video} type="video/mp4" />
+      </video>
+      <span className="featured-badge mono">Featured project</span>
+      <span className="preview-hint mono">Hover to preview</span>
+    </div>
+  )
+}
+
 /* ============================================================================
    APP
    ========================================================================= */
@@ -398,6 +542,7 @@ export default function App() {
   const [progress, setProgress] = useState(0)
   const [photoOpen, setPhotoOpen] = useState(false)
   const [filter, setFilter] = useState('All')
+  const [expandedProject, setExpandedProject] = useState(null)
   const [copied, setCopied] = useState(null)
   const avatarButton = useRef(null)
   const resumeWrap = useRef(null)
@@ -504,6 +649,9 @@ export default function App() {
     try {
       await navigator.clipboard.writeText(email)
       setCopied(email)
+      window.dispatchEvent(new CustomEvent('cursor-message', {
+        detail: { label: 'COPIED', tone: 'green', duration: 1000 },
+      }))
       setTimeout(() => setCopied((current) => (current === email ? null : current)), 1800)
     } catch {
       window.location.href = `mailto:${email}`
@@ -523,6 +671,7 @@ export default function App() {
     filter === 'All' ? PROJECTS : PROJECTS.filter((p) => p.tags.includes(filter))
   const featuredProject = filteredProjects.find((p) => p.featured)
   const regularProjects = filteredProjects.filter((p) => !p.featured)
+  const toggleProject = (id) => setExpandedProject((current) => (current === id ? null : id))
 
   const allTags = ['All', ...FILTERS]
 
@@ -544,6 +693,9 @@ export default function App() {
               className="photo-close interactive"
               onClick={() => setPhotoOpen(false)}
               aria-label="Close enlarged photo"
+              data-cursor="CLOSE"
+              data-cursor-tone="red"
+              data-cursor-magnetic
               autoFocus
             >
               ×
@@ -572,6 +724,9 @@ export default function App() {
               aria-label="View a larger photo of Prasanna Sairam"
               aria-haspopup="dialog"
               aria-expanded={photoOpen}
+              data-cursor="VIEW"
+              data-cursor-tone="blue"
+              data-cursor-magnetic
             >
               <img src={DEFAULT_IMAGE} alt="Prasanna Sairam" />
               <span className="avatar-expand">{Icon.expand()}</span>
@@ -603,13 +758,13 @@ export default function App() {
             </nav>
 
             <div className="side-social">
-              <a href={PROFILE.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="interactive">
+              <a href={PROFILE.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="interactive" data-cursor="GITHUB" data-cursor-tone="blue" data-cursor-magnetic>
                 {Icon.github()}
               </a>
-              <a href={PROFILE.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="interactive">
+              <a href={PROFILE.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="interactive" data-cursor="LINKEDIN" data-cursor-tone="blue" data-cursor-magnetic>
                 {Icon.linkedin()}
               </a>
-              <a href={`mailto:${PROFILE.emails[0].address}`} aria-label="Email" className="interactive">
+              <a href={`mailto:${PROFILE.emails[0].address}`} aria-label="Email" className="interactive" data-cursor="EMAIL" data-cursor-tone="blue" data-cursor-magnetic>
                 {Icon.mail()}
               </a>
             </div>
@@ -644,7 +799,14 @@ export default function App() {
             </div>
 
             <div className="choices reveal">
-              <a className="choice choice-resume interactive" href="/resume.pdf" download>
+              <a
+                className="choice choice-resume interactive"
+                href="/resume.pdf"
+                download
+                data-cursor="PDF"
+                data-cursor-tone="amber"
+                data-cursor-magnetic
+              >
                 <span className="choice-icon">{Icon.doc()}</span>
                 <span className="choice-body">
                   <span className="choice-kicker mono">Recruiter shortcut</span>
@@ -653,7 +815,13 @@ export default function App() {
                 </span>
                 <span className="choice-arrow">{Icon.download()}</span>
               </a>
-              <button className="choice choice-projects interactive" onClick={() => goTo('projects')}>
+              <button
+                className="choice choice-projects interactive"
+                onClick={() => goTo('projects')}
+                data-cursor="PROJECTS"
+                data-cursor-tone="blue"
+                data-cursor-magnetic
+              >
                 <span className="choice-icon">{Icon.code()}</span>
                 <span className="choice-body">
                   <span className="choice-title">My projects</span>
@@ -737,10 +905,10 @@ export default function App() {
             </header>
 
             <div className="resume-actions reveal">
-              <a className="btn btn-amber interactive" href="/resume.pdf" download>
+              <a className="btn btn-amber interactive" href="/resume.pdf" download data-cursor="PDF" data-cursor-tone="amber" data-cursor-magnetic>
                 {Icon.download()} Download PDF
               </a>
-              <button className="btn btn-ghost interactive" onClick={fullscreenResume}>
+              <button className="btn btn-ghost interactive" onClick={fullscreenResume} data-cursor="VIEW" data-cursor-tone="blue" data-cursor-magnetic>
                 {Icon.expand()} Full-screen
               </button>
             </div>
@@ -801,10 +969,7 @@ export default function App() {
 
             {featuredProject && (
               <article className="featured-project reveal">
-                <div className="featured-media">
-                  <img src={featuredProject.image} alt={featuredProject.imageAlt} />
-                  <span className="featured-badge mono">Featured project</span>
-                </div>
+                <FeaturedPreview project={featuredProject} />
                 <div className="featured-content">
                   <div className="featured-meta mono">
                     <span>{featuredProject.date}</span>
@@ -822,9 +987,17 @@ export default function App() {
                       <span key={t} className={`tag${filter === t ? ' tag-active' : ''}`}>{t}</span>
                     ))}
                   </div>
+                  <ProjectCaseStudy
+                    project={featuredProject}
+                    expanded={expandedProject === featuredProject.id}
+                    onToggle={() => toggleProject(featuredProject.id)}
+                  />
                   <a
                     className="project-cta interactive"
                     href={`mailto:${PROFILE.emails[0].address}?subject=${encodeURIComponent('Escape from UB project')}`}
+                    data-cursor="EMAIL"
+                    data-cursor-tone="blue"
+                    data-cursor-magnetic
                   >
                     {Icon.mail()} Ask me about this build
                   </a>
@@ -856,9 +1029,16 @@ export default function App() {
                         </span>
                       ))}
                     </div>
+                    <ProjectCaseStudy
+                      project={p}
+                      expanded={expandedProject === p.id}
+                      onToggle={() => toggleProject(p.id)}
+                    />
                     <a
                       className="project-link interactive"
                       href={`mailto:${PROFILE.emails[0].address}?subject=${encodeURIComponent(`${p.title} project`)}`}
+                      data-cursor="EMAIL"
+                      data-cursor-tone="blue"
                     >
                       Ask about this project {Icon.arrow()}
                     </a>
@@ -925,6 +1105,9 @@ export default function App() {
                     className="email-copy interactive"
                     onClick={() => copyEmail(address)}
                     aria-label={`Copy ${label.toLowerCase()} email address`}
+                    data-cursor="COPY"
+                    data-cursor-tone="blue"
+                    data-cursor-magnetic
                   >
                     <span className="email-details">
                       <span className="email-label">{label}</span>
@@ -948,14 +1131,17 @@ export default function App() {
                     key={address}
                     className={`btn ${index === 0 ? 'btn-accent' : 'btn-ghost'} interactive`}
                     href={`mailto:${address}`}
+                    data-cursor="EMAIL"
+                    data-cursor-tone="blue"
+                    data-cursor-magnetic
                   >
                     {Icon.mail()} {label} email
                   </a>
                 ))}
-                <a className="btn btn-ghost interactive" href={PROFILE.github} target="_blank" rel="noopener noreferrer">
+                <a className="btn btn-ghost interactive" href={PROFILE.github} target="_blank" rel="noopener noreferrer" data-cursor="GITHUB" data-cursor-tone="blue" data-cursor-magnetic>
                   {Icon.github()} GitHub
                 </a>
-                <a className="btn btn-ghost interactive" href={PROFILE.linkedin} target="_blank" rel="noopener noreferrer">
+                <a className="btn btn-ghost interactive" href={PROFILE.linkedin} target="_blank" rel="noopener noreferrer" data-cursor="LINKEDIN" data-cursor-tone="blue" data-cursor-magnetic>
                   {Icon.linkedin()} LinkedIn
                 </a>
               </div>
@@ -1057,30 +1243,51 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 }
 
 /* Custom cursor ---------------------------------------------------------- */
-.cursor-dot, .cursor-ring, .cursor-glow { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 950; }
+.has-custom-cursor {
+  --cursor-color: var(--accent);
+  --cursor-soft: rgba(91, 140, 255, 0.12);
+}
+.has-custom-cursor[data-cursor-tone="amber"] { --cursor-color: var(--amber); --cursor-soft: rgba(240, 182, 75, 0.12); }
+.has-custom-cursor[data-cursor-tone="red"] { --cursor-color: #ff4d5f; --cursor-soft: rgba(255, 77, 95, 0.14); }
+.has-custom-cursor[data-cursor-tone="green"] { --cursor-color: var(--green); --cursor-soft: rgba(61, 220, 132, 0.14); }
+.cursor-dot, .cursor-ring, .cursor-glow, .cursor-label { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 950; }
 .has-custom-cursor, .has-custom-cursor a, .has-custom-cursor button, .has-custom-cursor .interactive { cursor: none; }
 .cursor-dot {
-  width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px;
-  border-radius: 50%; background: var(--accent);
-  transition: opacity 0.2s;
+  width: 14px; height: 14px; margin: -7px 0 0 -7px;
+  color: var(--cursor-color); transition: opacity 0.2s, color 0.18s;
 }
+.cursor-dot::before, .cursor-dot::after { content: ''; position: absolute; background: currentColor; border-radius: 2px; }
+.cursor-dot::before { width: 14px; height: 2px; top: 6px; left: 0; }
+.cursor-dot::after { width: 2px; height: 14px; top: 0; left: 6px; }
 .cursor-ring {
-  width: 34px; height: 34px; margin: -17px 0 0 -17px;
-  border: 1.5px solid rgba(91, 140, 255, 0.6); border-radius: 50%;
-  transition: width 0.2s, height 0.2s, margin 0.2s, border-color 0.2s, background 0.2s;
+  width: 38px; height: 38px; margin: -19px 0 0 -19px;
+  border: 1.5px solid var(--cursor-color); border-radius: 50%;
+  background: var(--cursor-soft);
+  box-shadow: 0 0 24px var(--cursor-soft);
+  transition: width 0.2s, height 0.2s, margin 0.2s, border-radius 0.2s, border-color 0.18s, background 0.18s, opacity 0.2s;
 }
+.cursor-ring::after { content: ''; position: absolute; inset: -1px; border: 1px solid var(--cursor-color); border-radius: inherit; opacity: 0; }
 .cursor-glow {
   width: 360px; height: 360px; margin: -180px 0 0 -180px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(91, 140, 255, 0.10), transparent 65%);
+  background: radial-gradient(circle, var(--cursor-soft), transparent 65%);
   transition: width 0.3s, height 0.3s, margin 0.3s;
+}
+.cursor-label {
+  padding: 5px 8px; border-radius: 6px;
+  color: #061127; background: var(--cursor-color);
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em;
+  opacity: 0; transition: opacity 0.14s, color 0.18s, background 0.18s;
 }
 .cursor-hover .cursor-ring {
   width: 54px; height: 54px; margin: -27px 0 0 -27px;
-  border-color: var(--amber); background: rgba(240, 182, 75, 0.08);
 }
 .cursor-hover .cursor-glow { width: 460px; height: 460px; margin: -230px 0 0 -230px; }
+.cursor-has-label .cursor-ring { width: 68px; height: 40px; margin: -20px 0 0 -34px; border-radius: 999px; }
+.cursor-has-label .cursor-label { opacity: 1; }
 .cursor-down .cursor-ring { width: 26px; height: 26px; margin: -13px 0 0 -13px; }
-.cursor-hidden .cursor-dot, .cursor-hidden .cursor-ring, .cursor-hidden .cursor-glow { opacity: 0; }
+.cursor-pulse .cursor-ring::after { animation: cursor-radar 0.4s ease-out both; }
+.cursor-hidden .cursor-dot, .cursor-hidden .cursor-ring, .cursor-hidden .cursor-glow, .cursor-hidden .cursor-label { opacity: 0; }
+@keyframes cursor-radar { from { opacity: 0.8; transform: scale(0.7); } to { opacity: 0; transform: scale(1.9); } }
 
 /* Portrait lightbox ------------------------------------------------------ */
 .photo-lightbox {
@@ -1399,12 +1606,22 @@ button.tag:hover, .tag-active { background: var(--accent); color: #04122e; }
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(90deg, transparent 65%, rgba(8,18,41,0.42)), linear-gradient(0deg, rgba(0,0,0,0.28), transparent 45%);
 }
-.featured-media img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; filter: brightness(1.22) contrast(1.05); }
+.featured-media video { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; filter: brightness(1.22) contrast(1.05); }
+.featured-media:focus-visible { outline: 2px solid #ff4d5f; outline-offset: -3px; }
 .featured-badge {
   position: absolute; z-index: 1; top: 18px; left: 18px;
   padding: 7px 11px; border-radius: 999px;
   color: #2a1c00; background: var(--amber); font-size: 10.5px; letter-spacing: 0.07em; text-transform: uppercase;
 }
+.preview-hint {
+  position: absolute; z-index: 1; left: 18px; bottom: 18px;
+  padding: 6px 9px; border-radius: 7px;
+  color: var(--text); background: rgba(4,10,24,0.74);
+  border: 1px solid rgba(255,255,255,0.12);
+  font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.featured-media:hover .preview-hint, .featured-media:focus .preview-hint { opacity: 0; transform: translateY(4px); }
 .featured-content { padding: 30px; display: flex; flex-direction: column; justify-content: center; }
 .featured-meta { display: flex; justify-content: space-between; gap: 14px; color: var(--muted-2); font-size: 11.5px; }
 .featured-content h3 { font-size: 28px; margin: 12px 0 10px; }
@@ -1419,6 +1636,31 @@ button.tag:hover, .tag-active { background: var(--accent); color: #04122e; }
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .project-cta:hover { transform: translateY(-2px); box-shadow: 0 9px 25px rgba(91,140,255,0.23); }
+
+.case-study-wrap { margin-top: 20px; }
+.case-study-toggle {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  width: 100%; padding: 11px 13px; border-radius: 10px;
+  color: var(--text); background: var(--bg-2); border: 1px solid var(--panel-line);
+  font-family: var(--sans); font-size: 13.5px; font-weight: 600; text-align: left;
+  transition: border-color 0.2s, background 0.2s;
+}
+.case-study-toggle:hover, .case-study-toggle.open { border-color: var(--amber); background: var(--amber-soft); }
+.case-study-toggle svg { width: 16px; height: 16px; flex: none; transition: transform 0.22s; }
+.case-study-toggle.open svg { transform: rotate(90deg); }
+.case-study {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
+  margin-top: 10px; animation: case-study-in 0.24s ease both;
+}
+.featured-project .case-study { grid-template-columns: 1fr; }
+.case-study-step {
+  padding: 14px; border-radius: 10px;
+  background: rgba(5,13,31,0.64); border: 1px solid var(--panel-line);
+}
+.case-study-label { display: block; color: var(--amber); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 7px; }
+.case-study-step p { color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+@keyframes case-study-in { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .case-study { animation: none; } }
 
 .project-list { display: flex; flex-direction: column; gap: 16px; }
 /* Re-keyed on every filter change, so the results always animate in fully
@@ -1537,6 +1779,7 @@ button.tag:hover, .tag-active { background: var(--accent); color: #04122e; }
   .choices, .highlight-grid { grid-template-columns: 1fr; }
   .featured-project { grid-template-columns: 1fr; }
   .featured-media { min-height: 0; aspect-ratio: 16 / 9; }
+  .case-study { grid-template-columns: 1fr; }
   .project { grid-template-columns: 1fr; gap: 14px; padding: 22px; }
   .exp-card { padding: 22px; }
   .exp-card h3 { font-size: 18px; }
@@ -1552,5 +1795,9 @@ button.tag:hover, .tag-active { background: var(--accent); color: #04122e; }
   .contact-card { padding: 22px; }
   .email-copy { align-items: flex-start; padding: 14px; }
   .email-text { font-size: 13px; overflow-wrap: anywhere; }
+}
+
+@media (hover: none) {
+  .preview-hint { display: none; }
 }
 `
