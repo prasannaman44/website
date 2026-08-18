@@ -140,6 +140,11 @@ const PROJECTS = [
     id: '04',
     title: 'Escape from UB',
     date: 'Nov – Dec 2025',
+    featured: true,
+    image: '/escape-from-ub.png',
+    imageAlt: 'Escape from UB gameplay showing the enemy encounter, battery meter, flash control, and map UI',
+    summary:
+      'A first-person survival-horror experience where every camera check, flash, and route choice costs time and battery.',
     tags: ['Unreal Engine', 'C++'],
     bullets: [
       "Designed and built a horror survival game inspired by Five Nights at Freddy's, featuring camera surveillance, enemy AI, and player resource management.",
@@ -516,6 +521,8 @@ export default function App() {
 
   const filteredProjects =
     filter === 'All' ? PROJECTS : PROJECTS.filter((p) => p.tags.includes(filter))
+  const featuredProject = filteredProjects.find((p) => p.featured)
+  const regularProjects = filteredProjects.filter((p) => !p.featured)
 
   const allTags = ['All', ...FILTERS]
 
@@ -622,14 +629,15 @@ export default function App() {
             </div>
 
             <div className="choices reveal">
-              <button className="choice choice-resume interactive" onClick={() => goTo('resume')}>
+              <a className="choice choice-resume interactive" href="/resume.pdf" download>
                 <span className="choice-icon">{Icon.doc()}</span>
                 <span className="choice-body">
-                  <span className="choice-title">My résumé</span>
-                  <span className="choice-sub">The one-page version — read or download.</span>
+                  <span className="choice-kicker mono">Recruiter shortcut</span>
+                  <span className="choice-title">Download my résumé</span>
+                  <span className="choice-sub">One-page PDF with the full technical picture.</span>
                 </span>
-                <span className="choice-arrow">{Icon.arrow()}</span>
-              </button>
+                <span className="choice-arrow">{Icon.download()}</span>
+              </a>
               <button className="choice choice-projects interactive" onClick={() => goTo('projects')}>
                 <span className="choice-icon">{Icon.code()}</span>
                 <span className="choice-body">
@@ -760,7 +768,7 @@ export default function App() {
             <header className="section-head reveal">
               <span className="section-id mono">/ projects</span>
               <h2>Everything I've built</h2>
-              <p className="section-lead">Filter by what it's made of.</p>
+              <p className="section-lead">A closer look at how I turn low-level ideas into working systems and experiences.</p>
             </header>
 
             <div className="filters reveal" role="group" aria-label="Filter projects by technology">
@@ -776,8 +784,41 @@ export default function App() {
               ))}
             </div>
 
+            {featuredProject && (
+              <article className="featured-project reveal">
+                <div className="featured-media">
+                  <img src={featuredProject.image} alt={featuredProject.imageAlt} />
+                  <span className="featured-badge mono">Featured project</span>
+                </div>
+                <div className="featured-content">
+                  <div className="featured-meta mono">
+                    <span>{featuredProject.date}</span>
+                    <span>Project {featuredProject.id}</span>
+                  </div>
+                  <h3>{featuredProject.title}</h3>
+                  <p className="featured-summary">{featuredProject.summary}</p>
+                  <ul className="project-bullets">
+                    {featuredProject.bullets.slice(0, 2).map((b, i) => (
+                      <li key={i}>{b}</li>
+                    ))}
+                  </ul>
+                  <div className="tag-row">
+                    {featuredProject.tags.map((t) => (
+                      <span key={t} className={`tag${filter === t ? ' tag-active' : ''}`}>{t}</span>
+                    ))}
+                  </div>
+                  <a
+                    className="project-cta interactive"
+                    href={`mailto:${PROFILE.emails[0].address}?subject=${encodeURIComponent('Escape from UB project')}`}
+                  >
+                    {Icon.mail()} Ask me about this build
+                  </a>
+                </div>
+              </article>
+            )}
+
             <div className="project-list" key={filter}>
-              {filteredProjects.map((p) => (
+              {regularProjects.map((p) => (
                 <article className="project" key={p.id}>
                   <div className="project-side">
                     <span className="project-id mono">{p.id}</span>
@@ -800,6 +841,12 @@ export default function App() {
                         </span>
                       ))}
                     </div>
+                    <a
+                      className="project-link interactive"
+                      href={`mailto:${PROFILE.emails[0].address}?subject=${encodeURIComponent(`${p.title} project`)}`}
+                    >
+                      Ask about this project {Icon.arrow()}
+                    </a>
                   </div>
                 </article>
               ))}
@@ -1039,8 +1086,8 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 
 .avatar {
   position: relative;
-  width: 92px; height: 92px;
-  border-radius: 22px;
+  width: 144px; height: 144px;
+  border-radius: 30px;
   border: 1px solid var(--panel-line);
   background: var(--panel);
   padding: 0; overflow: hidden;
@@ -1170,16 +1217,22 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
   display: flex; align-items: center; gap: 16px; text-align: left;
   padding: 22px; border-radius: var(--radius);
   background: var(--panel); border: 1px solid var(--panel-line);
-  color: var(--text); font-family: var(--sans);
+  color: var(--text); font-family: var(--sans); text-decoration: none;
   transition: transform 0.25s, border-color 0.25s, background 0.25s;
 }
 .choice:hover { transform: translateY(-3px); }
 .choice-icon { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; flex: none; }
-.choice-resume .choice-icon { background: var(--amber-soft); color: var(--amber); }
-.choice-resume:hover { border-color: var(--amber); background: linear-gradient(180deg, var(--panel), rgba(240,182,75,0.05)); }
+.choice-resume {
+  border-color: rgba(240,182,75,0.48);
+  background: linear-gradient(135deg, rgba(240,182,75,0.16), var(--panel) 62%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+}
+.choice-resume .choice-icon { background: var(--amber); color: #2a1c00; }
+.choice-resume:hover { border-color: var(--amber); background: linear-gradient(135deg, rgba(240,182,75,0.24), var(--panel) 70%); }
 .choice-projects .choice-icon { background: var(--accent-soft); color: var(--accent); }
 .choice-projects:hover { border-color: var(--accent); background: linear-gradient(180deg, var(--panel), rgba(91,140,255,0.05)); }
 .choice-body { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.choice-kicker { color: var(--amber); font-size: 10.5px; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 2px; }
 .choice-title { font-size: 18px; font-weight: 600; }
 .choice-sub { color: var(--muted); font-size: 13.5px; }
 .choice-arrow { color: var(--muted); transition: transform 0.25s, color 0.25s; flex: none; }
@@ -1288,6 +1341,38 @@ button.tag:hover, .tag-active { background: var(--accent); color: #04122e; }
 .filter:hover { color: var(--text); border-color: var(--accent); }
 .filter.active { color: #04122e; background: var(--accent); border-color: var(--accent); }
 
+.featured-project {
+  display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.85fr);
+  overflow: hidden; margin-bottom: 18px; border-radius: var(--radius);
+  background: var(--panel); border: 1px solid rgba(240,182,75,0.34);
+  box-shadow: 0 22px 55px rgba(0,0,0,0.18);
+}
+.featured-media { position: relative; min-height: 370px; overflow: hidden; background: #020203; }
+.featured-media::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(90deg, transparent 65%, rgba(8,18,41,0.42)), linear-gradient(0deg, rgba(0,0,0,0.28), transparent 45%);
+}
+.featured-media img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; filter: brightness(1.22) contrast(1.05); }
+.featured-badge {
+  position: absolute; z-index: 1; top: 18px; left: 18px;
+  padding: 7px 11px; border-radius: 999px;
+  color: #2a1c00; background: var(--amber); font-size: 10.5px; letter-spacing: 0.07em; text-transform: uppercase;
+}
+.featured-content { padding: 30px; display: flex; flex-direction: column; justify-content: center; }
+.featured-meta { display: flex; justify-content: space-between; gap: 14px; color: var(--muted-2); font-size: 11.5px; }
+.featured-content h3 { font-size: 28px; margin: 12px 0 10px; }
+.featured-summary { color: var(--text); font-size: 16px; line-height: 1.65; margin-bottom: 18px; }
+.project-cta, .project-link {
+  display: inline-flex; align-items: center; gap: 8px; width: fit-content;
+  color: var(--text); text-decoration: none; font-size: 13.5px; font-weight: 600;
+}
+.project-cta {
+  margin-top: 22px; padding: 10px 14px; border-radius: 10px;
+  color: #04122e; background: var(--accent);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.project-cta:hover { transform: translateY(-2px); box-shadow: 0 9px 25px rgba(91,140,255,0.23); }
+
 .project-list { display: flex; flex-direction: column; gap: 16px; }
 /* Re-keyed on every filter change, so the results always animate in fully
    visible — no dependency on the scroll-reveal observer. */
@@ -1312,6 +1397,10 @@ button.tag:hover, .tag-active { background: var(--accent); color: #04122e; }
   width: 6px; height: 6px; border-radius: 50%;
   background: var(--accent);
 }
+.project-link { margin-top: 18px; color: var(--accent); }
+.project-link svg { width: 15px; height: 15px; transition: transform 0.2s; }
+.project-link:hover { color: var(--text); }
+.project-link:hover svg { transform: translateX(3px); }
 .empty { color: var(--muted); padding: 30px; text-align: center; }
 
 /* Skills ----------------------------------------------------------------- */
@@ -1379,7 +1468,7 @@ button.tag:hover, .tag-active { background: var(--accent); color: #04122e; }
     padding: 14px 18px;
   }
   .sidebar-inner { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 14px; min-height: 0; width: 100%; }
-  .avatar { width: 44px; height: 44px; border-radius: 13px; flex: none; }
+  .avatar { width: 52px; height: 52px; border-radius: 15px; flex: none; }
   .avatar-initials { font-size: 15px; }
   .avatar-cam { display: none; }
   .side-id { flex: 1 1 auto; min-width: 0; }
@@ -1400,6 +1489,8 @@ button.tag:hover, .tag-active { background: var(--accent); color: #04122e; }
   .main { margin-left: 0; padding: 0 20px; max-width: 100%; }
   .section { padding: 64px 0; }
   .choices, .highlight-grid { grid-template-columns: 1fr; }
+  .featured-project { grid-template-columns: 1fr; }
+  .featured-media { min-height: 0; aspect-ratio: 16 / 9; }
   .project { grid-template-columns: 1fr; gap: 14px; padding: 22px; }
   .exp-card { padding: 22px; }
   .exp-card h3 { font-size: 18px; }
