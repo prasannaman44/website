@@ -434,27 +434,22 @@ function CustomCursor() {
 }
 
 /* ============================================================================
-   BACKGROUND MUSIC — opt-in, quiet, and paused while the tab is hidden.
+   BACKGROUND MUSIC — starts immediately when the browser allows it. Browsers
+   that block audible autoplay unlock it on the visitor's first interaction.
    ============================================================================ */
 
-function MusicPlayer() {
+function BackgroundMusic() {
   const audio = useRef(null)
-  const wantsMusic = useRef(false)
-  const [playing, setPlaying] = useState(false)
 
   useEffect(() => {
     const player = audio.current
     if (!player) return
 
     player.volume = 0.14
-    wantsMusic.current = window.localStorage.getItem('prasanna-music') === 'on'
-
     const start = () => {
-      if (!wantsMusic.current || document.hidden) return
-      player.play().then(() => setPlaying(true)).catch(() => setPlaying(false))
+      if (document.hidden || !player.paused) return
+      player.play().catch(() => {})
     }
-    const handlePlay = () => setPlaying(true)
-    const handlePause = () => setPlaying(false)
     const handleVisibility = () => {
       if (document.hidden) {
         player.pause()
@@ -463,62 +458,24 @@ function MusicPlayer() {
       }
     }
 
-    player.addEventListener('play', handlePlay)
-    player.addEventListener('pause', handlePause)
     document.addEventListener('visibilitychange', handleVisibility)
+    document.addEventListener('pointerdown', start, { once: true })
+    document.addEventListener('touchstart', start, { once: true, passive: true })
+    document.addEventListener('keydown', start, { once: true })
     start()
 
     return () => {
-      player.removeEventListener('play', handlePlay)
-      player.removeEventListener('pause', handlePause)
       document.removeEventListener('visibilitychange', handleVisibility)
+      document.removeEventListener('pointerdown', start)
+      document.removeEventListener('touchstart', start)
+      document.removeEventListener('keydown', start)
     }
   }, [])
 
-  const toggleMusic = () => {
-    const player = audio.current
-    if (!player) return
-
-    if (player.paused) {
-      wantsMusic.current = true
-      window.localStorage.setItem('prasanna-music', 'on')
-      player.play().then(() => setPlaying(true)).catch(() => setPlaying(false))
-    } else {
-      wantsMusic.current = false
-      window.localStorage.setItem('prasanna-music', 'off')
-      player.pause()
-    }
-  }
-
   return (
-    <aside className={`music-player${playing ? ' playing' : ''}`} aria-label="Background music player">
-      <audio ref={audio} loop preload="none">
-        <source src="/sweet-september-lofi.mp3" type="audio/mpeg" />
-      </audio>
-      <button
-        className="music-toggle interactive"
-        type="button"
-        onClick={toggleMusic}
-        aria-label={playing ? 'Pause calm lo-fi music' : 'Play calm lo-fi music'}
-        aria-pressed={playing}
-        data-cursor={playing ? 'PAUSE' : 'PLAY'}
-        data-cursor-tone="green"
-        data-cursor-magnetic
-      >
-        <span className="music-disc" aria-hidden="true">
-          <span className="music-note">♪</span>
-        </span>
-        <span className="music-copy">
-          <span className="music-kicker mono">LO-FI RADIO</span>
-          <span className="music-title">{playing ? 'Sweet September · Arulo' : 'Play calm beats'}</span>
-        </span>
-        <span className="music-eq" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </span>
-      </button>
-    </aside>
+    <audio ref={audio} autoPlay loop preload="auto" aria-hidden="true">
+      <source src="/sweet-september-lofi.mp3" type="audio/mpeg" />
+    </audio>
   )
 }
 
@@ -768,7 +725,7 @@ export default function App() {
     <>
       <style>{CSS}</style>
       <CustomCursor />
-      <MusicPlayer />
+      <BackgroundMusic />
 
       {photoOpen && (
         <div className="photo-lightbox" onClick={() => setPhotoOpen(false)}>
@@ -1379,46 +1336,6 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 .cursor-hidden .cursor-dot, .cursor-hidden .cursor-ring, .cursor-hidden .cursor-glow, .cursor-hidden .cursor-label { opacity: 0; }
 @keyframes cursor-radar { from { opacity: 0.8; transform: scale(0.7); } to { opacity: 0; transform: scale(1.9); } }
 
-/* Background music ------------------------------------------------------ */
-.music-player {
-  position: fixed; right: 22px; bottom: 22px; z-index: 880;
-  filter: drop-shadow(0 16px 30px rgba(0,0,0,0.35));
-}
-.music-toggle {
-  min-width: 220px; display: flex; align-items: center; gap: 11px;
-  padding: 10px 12px; border-radius: 14px;
-  color: var(--text); background: rgba(10,23,51,0.9);
-  border: 1px solid var(--panel-line); backdrop-filter: blur(14px);
-  font-family: var(--sans); text-align: left;
-  transition: transform 0.22s, border-color 0.22s, background 0.22s;
-}
-.music-toggle:hover { transform: translateY(-2px); border-color: rgba(61,220,132,0.55); background: rgba(14,29,61,0.96); }
-.music-disc {
-  position: relative; width: 38px; height: 38px; flex: none;
-  display: grid; place-items: center; border-radius: 50%;
-  color: #061127; background:
-    radial-gradient(circle at center, var(--bg) 0 8%, transparent 9%),
-    repeating-radial-gradient(circle at center, rgba(6,17,39,0.2) 0 1px, transparent 2px 5px),
-    linear-gradient(135deg, var(--green), var(--accent));
-  box-shadow: 0 0 0 3px rgba(61,220,132,0.08);
-}
-.music-note { font-size: 18px; font-weight: 800; transform: translateY(-1px); }
-.music-copy { display: grid; gap: 1px; flex: 1; min-width: 0; }
-.music-kicker { color: var(--green); font-size: 9.5px; letter-spacing: 0.1em; }
-.music-title { color: var(--muted); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.music-eq { height: 19px; display: flex; align-items: end; gap: 2px; padding: 0 3px; }
-.music-eq i { display: block; width: 2px; height: 4px; border-radius: 2px; background: var(--muted-2); }
-.music-player.playing .music-disc { animation: music-spin 8s linear infinite; }
-.music-player.playing .music-eq i { background: var(--green); animation: music-eq 0.8s ease-in-out infinite alternate; }
-.music-player.playing .music-eq i:nth-child(2) { animation-delay: -0.35s; }
-.music-player.playing .music-eq i:nth-child(3) { animation-delay: -0.6s; }
-@keyframes music-spin { to { transform: rotate(360deg); } }
-@keyframes music-eq { from { height: 4px; } to { height: 18px; } }
-@media (prefers-reduced-motion: reduce) {
-  .music-player.playing .music-disc, .music-player.playing .music-eq i { animation: none; }
-  .music-player.playing .music-eq i { height: 12px; }
-}
-
 /* Portrait lightbox ------------------------------------------------------ */
 .photo-lightbox {
   position: fixed; inset: 0; z-index: 925;
@@ -1925,10 +1842,6 @@ button.tag:hover, .tag-active { background: var(--accent); color: #04122e; }
   .contact-card { padding: 22px; }
   .email-copy { align-items: flex-start; padding: 14px; }
   .email-text { font-size: 13px; overflow-wrap: anywhere; }
-  .music-player { right: 14px; bottom: 14px; }
-  .music-toggle { min-width: 0; width: 52px; height: 52px; padding: 7px; border-radius: 50%; }
-  .music-disc { width: 36px; height: 36px; }
-  .music-copy, .music-eq { display: none; }
 }
 
 @media (hover: none) {
